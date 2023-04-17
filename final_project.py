@@ -10,15 +10,23 @@ artists = ["Taylor Swift", "Ed Sheeran", "Beyonce", "Bruno Mars", "Drake", "Khal
 # Create a SQLite database and table to store the artist-city data
 conn = sqlite3.connect('finalDatabase.db')
 c = conn.cursor()
+# c.execute('''DROP TABLE IF EXISTS ticket_master''')
+# c.execute('''DROP TABLE IF EXISTS region_country''')
+# c.execute('''DROP TABLE IF EXISTS cities''')
+c.execute('''CREATE TABLE IF NOT EXISTS region_country
+                 (id integer PRIMARY KEY, name text , UNIQUE(name))''')
+c.execute('''CREATE TABLE IF NOT EXISTS cities
+                 (id integer PRIMARY KEY, name text , UNIQUE(name))''')
 c.execute("""
     CREATE TABLE IF NOT EXISTS ticket_master (
-        id INTEGER PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         artist_id INTEGER,
-        city TEXT,
-        region TEXT,
-        country TEXT,
-        FOREIGN KEY(artist_id) REFERENCES artists(id),
-        UNIQUE(artist_id, city)
+        city_id INTEGER,
+        region_country_id INTEGER,
+        FOREIGN KEY(artist_id) REFERENCES artists(id), 
+        FOREIGN KEY(region_country_id) REFERENCES region_country(id), 
+        FOREIGN KEY(city_id) REFERENCES cities(id)
+        UNIQUE(artist_id, city_id)
     )
 """)
 
@@ -47,16 +55,16 @@ if "_embedded" in search_response:
         city = event["_embedded"]["venues"][0]["city"]["name"]
         region = event["_embedded"]["venues"][0]["state"]["name"]
         country = event["_embedded"]["venues"][0]["country"]["name"]
-        
-        c.execute("SELECT MAX(id) FROM ticket_master")
+        region_country = region + "," + country
+        c.execute("SELECT COUNT(*) FROM ticket_master")
         max_id = c.fetchone()[0]
-        if max_id is None:
-            max_id = 1
-
+        curr_id = max_id + 1
+        c.execute('INSERT OR IGNORE INTO region_country (name) VALUES (?)', (region_country,))
+        c.execute('INSERT OR IGNORE INTO cities (name) VALUES (?)', (city,))
         # Insert the data into the artist_cities table
         c.execute("""
-            INSERT OR REPLACE INTO ticket_master (id, artist_id, city, region, country)
-            VALUES ((SELECT id FROM ticket_master WHERE artist_id=? AND city=?), ?, ?, ?, ?)""", (artist_id, city, artist_id, city, region, country))
+            INSERT OR IGNORE INTO ticket_master (id, artist_id, city_id, region_country_id)
+            VALUES (?, ?, (SELECT id FROM cities WHERE name = ?), (SELECT id FROM region_country WHERE name = ?) )""", (curr_id, artist_id, city, region_country))
 
 
         conn.commit()
