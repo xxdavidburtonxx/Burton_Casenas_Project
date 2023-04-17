@@ -11,7 +11,7 @@ def main():
     client_credentials_manager = SpotifyClientCredentials()
     sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
     
-    conn = sqlite3.connect('music.db')
+    conn = sqlite3.connect('finalDatabase.db')
     cursor = conn.cursor()
 
     # artists we are using
