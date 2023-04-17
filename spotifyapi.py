@@ -1,7 +1,3 @@
- # export SPOTIPY_CLIENT_ID=9511b86fc99b4f10a5fa20cb16f21b64
-# export SPOTIPY_CLIENT_SECRET=acd3f41233494703b66ce40e5b6264ed
-# SPOTIPY_REDIRECT_URI=https://localhost:8888/callback
-
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 import sqlite3
