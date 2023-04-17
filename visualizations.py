@@ -40,6 +40,7 @@ plt.show()
 sorted_df = df.sort_values(by='popularity', ascending=False)
 
 # create Barchart of the different artists and their popularity
+plt.subplots(figsize=(10, 7))
 sns.barplot(x='artist', y='popularity', data=sorted_df)
 plt.xticks(rotation=45, ha='right')
 plt.xlabel('Artist')
@@ -49,6 +50,7 @@ plt.show()
 
 new_sorted_df = df.sort_values(by='concerts_performed', ascending=False)
 #Creating bar chart of the different artists and amount of concerts they played
+plt.subplots(figsize=(10, 7))
 sns.barplot(x='artist', y='concerts_performed', data=new_sorted_df)
 plt.xticks(rotation=45, ha='right')
 plt.xlabel('Artist')
