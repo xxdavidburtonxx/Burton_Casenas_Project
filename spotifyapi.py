@@ -1,26 +1,7 @@
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 import sqlite3
-
-def main():
-    # set up found in spotipy guide 
-    client_credentials_manager = SpotifyClientCredentials()
-    sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
-    
-    conn = sqlite3.connect('finalDatabase.db')
-    cursor = conn.cursor()
-
-    # artists we are using
-    artists = ["Taylor Swift", "Ed Sheeran", "Beyonce", "Bruno Mars", "Drake", "Khalid", "Lady Gaga", "Katy Perry", "Bono", "Adele"]
-    # create tables artists, songs, and spotify
-    cursor.execute('''CREATE TABLE IF NOT EXISTS artists
-                 (id integer PRIMARY KEY, name text)''')
-    cursor.execute('''CREATE TABLE IF NOT EXISTS songs
-                 (id integer PRIMARY KEY, name text)''')
-    cursor.execute('''CREATE TABLE IF NOT EXISTS spotify
-                 (id integer PRIMARY KEY, artist_id integer, song_id integer, popularity integer,
-                 FOREIGN KEY(artist_id) REFERENCES artists(id), FOREIGN KEY(song_id) REFERENCES songs(id))''')
-    
+def gather_and_store(cursor, conn, sp, artists):
     # Check if the artist table is empty
     cursor.execute("SELECT COUNT(*) FROM artists")
     numArtists = cursor.fetchone()[0]
@@ -55,14 +36,33 @@ def main():
                     song_id = songNumber[0]
                 
                 # Insert songs and data into spotify table
-                cursor.execute("INSERT INTO songs (name) VALUES (?)", (name,))
+                cursor.execute("INSERT OR IGNORE INTO songs (name) VALUES (?)", (name,))
                 cursor.execute("INSERT INTO spotify (artist_id, song_id, popularity) VALUES (?, ?, ?)", (artist_id, song_id, popularity))
                 conn.commit()
         else:
             print(f"Error finding songs for artist {artist}")
 
-    # Close the database connection
-    conn.close()
 
+def main():
+    # set up found in spotipy guide 
+    client_credentials_manager = SpotifyClientCredentials()
+    sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
+    
+    conn = sqlite3.connect('finalDatabase.db')
+    cursor = conn.cursor()
+
+    # artists we are using
+    artists = ["Taylor Swift", "Ed Sheeran", "Beyonce", "Bruno Mars", "Drake", "Khalid", "Lady Gaga", "Katy Perry", "Bono", "Adele"]
+    # create tables artists, songs, and spotify
+    cursor.execute('''CREATE TABLE IF NOT EXISTS artists
+                 (id integer PRIMARY KEY, name text)''')
+    cursor.execute('''CREATE TABLE IF NOT EXISTS songs
+                 (id integer PRIMARY KEY, name text)''')
+    cursor.execute('''CREATE TABLE IF NOT EXISTS spotify
+                 (id integer PRIMARY KEY, artist_id integer, song_id integer, popularity integer,
+                 FOREIGN KEY(artist_id) REFERENCES artists(id), FOREIGN KEY(song_id) REFERENCES songs(id))''')
+    gather_and_store(cursor, conn, sp, artists)
+    
+    conn.close()
 if __name__ == "__main__":
     main()
